@@ -19,7 +19,7 @@ except:
     print("Config not found!")
     exit(-1)
 
-currency = "₭"
+currency = config['currency']
 def currency_fmt(amount):
     return "{0}{1}".format(amount, currency)
 
