@@ -1,6 +1,6 @@
 # Casino Bot
 
-This was something I made for my discord server.
+A bot for doing casino games on Discord.
 
 Use it if you want lol
 
