@@ -1,0 +1,6 @@
+{
+    "token": "TOKEN_GOES_HERE",
+    "prefix": "$",
+    "initial_balance": 100,
+    "currency": "₭"
+}

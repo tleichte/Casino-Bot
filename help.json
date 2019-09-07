@@ -1,0 +1,57 @@
+{
+    "entries":[
+        {
+            "command": "help",
+            "description": "Opens this help dialog."
+        },
+        {
+            "command": "collect",
+            "description": "Collects your accrued balance or creates your first balance."
+        },
+        {
+            "command": "balance",
+            "description": "Displays your current balance."
+        },
+        {
+            "command": "coin [# | all] [heads | tails]",
+            "description": "Bets points on a coin flip."
+        },
+        {
+            "command": "joust challenge [User] [#amount]",
+            "description": "Challenges a user to a joust for a specified amount."
+        },
+        {
+            "command": "joust show_active",
+            "description": "Displays all the active jousts."
+        },
+        {
+            "command": "joust cancel",
+            "description": "Cancels your current joust."
+        },
+        {
+            "command": "joust [accept | deny]",
+            "description": "Accepts or denies a challenged joust."
+        },
+        {
+            "command": "roulette [#amount] [BetType]",
+            "description": "Creates a new roulette round or adds your bet to the current round. Type *$roulette help* to see bet types and payouts."
+        },
+        {
+            "command": "leaderboard",
+            "description": "Shows the top 5 balances."
+        },
+        {
+            "command": "give [User] [#amount]",
+            "description": "Gives a user some money."
+        },
+        {
+            "command": "ping",
+            "description": "Displays the bot's current ping."
+        }
+    ],
+
+    "template": {
+        "command": "command",
+        "description": "description"
+    }
+}
