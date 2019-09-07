@@ -1,4 +1,4 @@
-# PointsBot
+# Casino Bot
 
 This was something I made for my discord server.
 
