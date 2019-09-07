@@ -12,6 +12,7 @@ import Roulette as _roulette
 
 
 # OPEN INITIAL FILES
+
 try:
     with open("config.json", 'r') as config_json:
         config = json.load(config_json)
@@ -19,9 +20,17 @@ except:
     print("Config not found!")
     exit(-1)
 
+
+
+#Currency Formatting
+
 currency = config['currency']
 def currency_fmt(amount):
     return "{0}{1}".format(amount, currency)
+
+
+
+#Classes / Enums
 
 class Return_Codes(Enum):
     Success = 0
@@ -56,6 +65,9 @@ class Jousts():
     def add_joust(self, challenger_id, receiver_id, amount):
         self.joust_dict[receiver_id] = { 'challenger': challenger_id, 'receiver': receiver_id, 'amount': amount }
 
+
+
+# Users
 
 user_directory = "users"
 
@@ -122,6 +134,9 @@ class Users():
         return sorted(items, key=user_sort_elem, reverse=True)[:5]
         
 
+
+# String Helpers
+
 def emoji_str(in_str, emoji_str):
     return "{0} :{1}:".format(in_str, emoji_str)
 
@@ -141,12 +156,16 @@ def joust_str(in_str):
     return emoji_str(in_str, "crossed_swords")
 
 
+# Initialization
 
 users = Users()
 jousts = Jousts()
 
 bot = commands.Bot(command_prefix=config['prefix'],description="A bot that promotes gambling with fictional points. Omit brackets on commands.")
 bot.remove_command('help')
+
+
+# Response String Helpers
 
 def response_str_user(user:discord.User, message:str):
     return "{0}, {1}".format(user.mention, message)
@@ -158,7 +177,7 @@ async def send_response(ctx:commands.Context, message:str):
     return await ctx.send(response_str_user(ctx.message.author, message))
 
 
-
+# Events
 
 @bot.event
 async def on_ready():
@@ -169,7 +188,7 @@ async def on_ready():
     
 
 
-# COMMANDS
+# Commands
 
 @bot.command()
 async def help(ctx):
@@ -187,8 +206,6 @@ async def help(ctx):
 
     await ctx.send(embed=help_embed)
 
-
-
 @bot.command()
 async def collect(ctx):
     user_id = ctx.message.author.id
@@ -204,7 +221,6 @@ async def collect(ctx):
             users.add_to_balance(user_id, amount, True)
             await send_response(ctx, money_str("You collected your accrued amount of {0} (Balance: {1})".format(currency_fmt(amount), currency_fmt(users.get_balance(user_id)))))
 
-
 @bot.command()
 async def balance(ctx):
     user_id = ctx.message.author.id
@@ -213,11 +229,10 @@ async def balance(ctx):
     else:
         await send_response(ctx, emoji_str("Your balance is {0}".format(currency_fmt(users.get_balance(user_id))), "bank"))
 
-
 HEADS = 1
 TAILS = 0
 
-def coin_string(value):
+def coin_str(value):
     return "Heads" if value is HEADS else "Tails"
 
 @bot.command()
@@ -254,7 +269,7 @@ async def coin(ctx, amount, flip):
         await send_response(ctx, error_str("Your bet exceeds your balance! (Balance: {0})".format(currency_fmt(users.get_balance(user_id)))))
     elif code is Return_Codes.Success:
         flip_value = random.randint(0,1)
-        await ctx.send("The coin flipped {}.".format(coin_string(flip_value)))
+        await ctx.send("The coin flipped {}.".format(coin_str(flip_value)))
         if  flip_value == flip:
             users.add_to_balance(user_id, amount)
             await send_response(ctx, money_str("Congrats, You've gained {0}! (Balance: {1})".format(currency_fmt(amount), currency_fmt(users.get_balance(user_id)))))
@@ -262,13 +277,11 @@ async def coin(ctx, amount, flip):
             users.add_to_balance(user_id, -amount)
             await send_response(ctx, money_loss_str("Oofda, you lost {0} (Balance: {1})".format(currency_fmt(amount), currency_fmt(users.get_balance(user_id)))))
 
-
 @bot.group()
 async def joust(ctx):
     if ctx.invoked_subcommand is None:
         await send_response(ctx, "Type **{0}joust challenge @user #** to challenge a user or *{0}joust show_active* to see active jousts!".format(config['prefix']))
     
-
 @joust.command()
 async def show_active(ctx):
     if len(jousts.joust_dict) == 0:
@@ -281,8 +294,6 @@ async def show_active(ctx):
             amount = joust['amount']
             output += "{0} challenges {1} for {2}\n".format(bot.get_user(challenger_id).mention, bot.get_user(receiver_id).mention, currency_fmt(amount))
     await ctx.send(output)
-
-
 
 @joust.command()
 async def challenge(ctx, receiver:discord.Member, amount):
@@ -324,7 +335,6 @@ async def challenge(ctx, receiver:discord.Member, amount):
             out_message = "{0}, {1} challenged you to a joust for {2}! Type **{3}joust [accept | deny]** to respond to their challenge!"
             await ctx.send(joust_str(out_message.format(receiver.mention, ctx.message.author.mention, currency_fmt(amount), config['prefix'])))
 
-
 @joust.command()
 async def cancel(ctx):
     challenger_id = ctx.message.author.id
@@ -335,7 +345,6 @@ async def cancel(ctx):
         joust = jousts.remove_joust_c(challenger_id)
         receiver_id = joust['receiver']
         await send_response(ctx, confirm_str("Successfully removed your active joust against {0}.".format(bot.get_user(receiver_id).mention)))
-
 
 @joust.command()
 async def accept(ctx):
@@ -372,7 +381,6 @@ async def accept(ctx):
                     users.add_to_balance(challenger_id, -amount)
                     await ctx.send(joust_str(output.format(bot.get_user(receiver_id).mention, currency_fmt(amount), currency_fmt(users.get_balance(receiver_id)))))
 
-
 @joust.command()
 async def deny(ctx):
     receiver_id = ctx.message.author.id
@@ -382,7 +390,6 @@ async def deny(ctx):
         joust = jousts.remove_joust_r(receiver_id)
         challenger_id = joust['challenger']
         await send_response(ctx, confirm_str("You denied a joust from {0}.".format(bot.get_user(challenger_id).mention)))
-
 
 @bot.command()
 async def leaderboard(ctx):
@@ -394,8 +401,6 @@ async def leaderboard(ctx):
         output += "{0}. {1} (Balance: {2})\n".format(i, user_obj.name, currency_fmt(users.get_balance(user[0])))
         i += 1
     await ctx.send(output)
-
-
 
 @bot.command()
 async def give(ctx, receiver:discord.Member, amount:int):
@@ -416,7 +421,6 @@ async def give(ctx, receiver:discord.Member, amount:int):
             users.add_to_balance(user_id, -amount)
             users.add_to_balance(receiver.id, amount)
             await send_response(ctx, confirm_str("You successfully sent {0} to {1}".format(currency_fmt(amount), receiver.mention)))
-
 
 roulette_in_progress = False
 roulette_bets = []
@@ -511,22 +515,10 @@ async def roulette(ctx, amount, bet_str:typing.Optional[str]=None):
         roulette_in_progress = False
         await ctx.send(output)
 
-
-
-
-
-
-        
-
-
-
-
 @bot.command()
 async def ping(ctx):
     await send_response(ctx, ":ping_pong: Pong! ({0}ms)".format(round(bot.latency*1000)))
 
 
-
-
-
+# Run
 bot.run(config['token'])
