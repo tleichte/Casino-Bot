@@ -33,9 +33,13 @@
             "description": "Accepts or denies a challenged joust."
         },
         {
-            "command": "roulette [#amount] [BetType]",
+            "command": "roulette [# | all] [BetType]",
             "description": "Creates a new roulette round or adds your bet to the current round. Type *$roulette help* to see bet types and payouts."
         },
+        {
+            "command": "blackjack [# | all]",
+            "description": "Creates a new blackjack round. React to the message to signal your next action."
+        }
         {
             "command": "leaderboard",
             "description": "Shows the top 5 balances."
