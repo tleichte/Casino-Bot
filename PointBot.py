@@ -9,10 +9,9 @@ from enum import Enum
 import discord
 from discord.ext import commands
 import Roulette as _roulette
-
+import Blackjack
 
 # OPEN INITIAL FILES
-
 try:
     with open("config.json", 'r') as config_json:
         config = json.load(config_json)
@@ -20,18 +19,12 @@ except:
     print("Config not found!")
     exit(-1)
 
-
-
 #Currency Formatting
-
 currency = config['currency']
 def currency_fmt(amount):
     return "{0}{1}".format(amount, currency)
 
-
-
 #Classes / Enums
-
 class Return_Codes(Enum):
     Success = 0
     Amount_Not_Enough = 1
@@ -65,10 +58,7 @@ class Jousts():
     def add_joust(self, challenger_id, receiver_id, amount):
         self.joust_dict[receiver_id] = { 'challenger': challenger_id, 'receiver': receiver_id, 'amount': amount }
 
-
-
 # Users
-
 user_directory = "users"
 
 def user_sort_elem(element):
@@ -133,10 +123,7 @@ class Users():
         items = self.user_dict.items()
         return sorted(items, key=user_sort_elem, reverse=True)[:5]
         
-
-
 # String Helpers
-
 def emoji_str(in_str, emoji_str):
     return "{0} :{1}:".format(in_str, emoji_str)
 
@@ -157,16 +144,13 @@ def joust_str(in_str):
 
 
 # Initialization
-
 users = Users()
 jousts = Jousts()
 
 bot = commands.Bot(command_prefix=config['prefix'],description="A bot that promotes gambling with fictional points. Omit brackets on commands.")
 bot.remove_command('help')
 
-
 # Response String Helpers
-
 def response_str_user(user:discord.User, message:str):
     return "{0}, {1}".format(user.mention, message)
 
@@ -177,8 +161,8 @@ async def send_response(ctx:commands.Context, message:str):
     return await ctx.send(response_str_user(ctx.message.author, message))
 
 
-# Events
 
+# Events
 @bot.event
 async def on_ready():
     print("Logged in as {} - {}".format(bot.user.name, bot.user.id))
@@ -188,8 +172,7 @@ async def on_ready():
     
 
 
-# Commands
-
+# COMMANDS
 @bot.command()
 async def help(ctx):
 
@@ -206,6 +189,8 @@ async def help(ctx):
 
     await ctx.send(embed=help_embed)
 
+
+
 @bot.command()
 async def collect(ctx):
     user_id = ctx.message.author.id
@@ -221,6 +206,7 @@ async def collect(ctx):
             users.add_to_balance(user_id, amount, True)
             await send_response(ctx, money_str("You collected your accrued amount of {0} (Balance: {1})".format(currency_fmt(amount), currency_fmt(users.get_balance(user_id)))))
 
+
 @bot.command()
 async def balance(ctx):
     user_id = ctx.message.author.id
@@ -229,10 +215,11 @@ async def balance(ctx):
     else:
         await send_response(ctx, emoji_str("Your balance is {0}".format(currency_fmt(users.get_balance(user_id))), "bank"))
 
+
 HEADS = 1
 TAILS = 0
 
-def coin_str(value):
+def coin_string(value):
     return "Heads" if value is HEADS else "Tails"
 
 @bot.command()
@@ -269,7 +256,7 @@ async def coin(ctx, amount, flip):
         await send_response(ctx, error_str("Your bet exceeds your balance! (Balance: {0})".format(currency_fmt(users.get_balance(user_id)))))
     elif code is Return_Codes.Success:
         flip_value = random.randint(0,1)
-        await ctx.send("The coin flipped {}.".format(coin_str(flip_value)))
+        await ctx.send("The coin flipped {}.".format(coin_string(flip_value)))
         if  flip_value == flip:
             users.add_to_balance(user_id, amount)
             await send_response(ctx, money_str("Congrats, You've gained {0}! (Balance: {1})".format(currency_fmt(amount), currency_fmt(users.get_balance(user_id)))))
@@ -277,11 +264,13 @@ async def coin(ctx, amount, flip):
             users.add_to_balance(user_id, -amount)
             await send_response(ctx, money_loss_str("Oofda, you lost {0} (Balance: {1})".format(currency_fmt(amount), currency_fmt(users.get_balance(user_id)))))
 
+
 @bot.group()
 async def joust(ctx):
     if ctx.invoked_subcommand is None:
         await send_response(ctx, "Type **{0}joust challenge @user #** to challenge a user or *{0}joust show_active* to see active jousts!".format(config['prefix']))
     
+
 @joust.command()
 async def show_active(ctx):
     if len(jousts.joust_dict) == 0:
@@ -294,6 +283,8 @@ async def show_active(ctx):
             amount = joust['amount']
             output += "{0} challenges {1} for {2}\n".format(bot.get_user(challenger_id).mention, bot.get_user(receiver_id).mention, currency_fmt(amount))
     await ctx.send(output)
+
+
 
 @joust.command()
 async def challenge(ctx, receiver:discord.Member, amount):
@@ -335,6 +326,7 @@ async def challenge(ctx, receiver:discord.Member, amount):
             out_message = "{0}, {1} challenged you to a joust for {2}! Type **{3}joust [accept | deny]** to respond to their challenge!"
             await ctx.send(joust_str(out_message.format(receiver.mention, ctx.message.author.mention, currency_fmt(amount), config['prefix'])))
 
+
 @joust.command()
 async def cancel(ctx):
     challenger_id = ctx.message.author.id
@@ -345,6 +337,7 @@ async def cancel(ctx):
         joust = jousts.remove_joust_c(challenger_id)
         receiver_id = joust['receiver']
         await send_response(ctx, confirm_str("Successfully removed your active joust against {0}.".format(bot.get_user(receiver_id).mention)))
+
 
 @joust.command()
 async def accept(ctx):
@@ -381,6 +374,7 @@ async def accept(ctx):
                     users.add_to_balance(challenger_id, -amount)
                     await ctx.send(joust_str(output.format(bot.get_user(receiver_id).mention, currency_fmt(amount), currency_fmt(users.get_balance(receiver_id)))))
 
+
 @joust.command()
 async def deny(ctx):
     receiver_id = ctx.message.author.id
@@ -390,6 +384,7 @@ async def deny(ctx):
         joust = jousts.remove_joust_r(receiver_id)
         challenger_id = joust['challenger']
         await send_response(ctx, confirm_str("You denied a joust from {0}.".format(bot.get_user(challenger_id).mention)))
+
 
 @bot.command()
 async def leaderboard(ctx):
@@ -401,6 +396,8 @@ async def leaderboard(ctx):
         output += "{0}. {1} (Balance: {2})\n".format(i, user_obj.name, currency_fmt(users.get_balance(user[0])))
         i += 1
     await ctx.send(output)
+
+
 
 @bot.command()
 async def give(ctx, receiver:discord.Member, amount:int):
@@ -421,6 +418,7 @@ async def give(ctx, receiver:discord.Member, amount:int):
             users.add_to_balance(user_id, -amount)
             users.add_to_balance(receiver.id, amount)
             await send_response(ctx, confirm_str("You successfully sent {0} to {1}".format(currency_fmt(amount), receiver.mention)))
+
 
 roulette_in_progress = False
 roulette_bets = []
@@ -514,6 +512,141 @@ async def roulette(ctx, amount, bet_str:typing.Optional[str]=None):
         roulette_bets.clear()
         roulette_in_progress = False
         await ctx.send(output)
+
+
+def hands_to_string(dealer_hand:Blackjack.Hand, player_hand:Blackjack.Hand, hide_dealer) -> str:
+    output = "Current Hands:\n"
+    output += "Dealer:\n"
+    output += "{}".format(dealer_hand.cards_string(hide_dealer))
+    if not hide_dealer:
+        output += "**({})**".format(dealer_hand.curr_value)
+    output += "\nPlayer:\n"
+    output += "{}**({})**\n".format(player_hand.cards_string(False), player_hand.curr_value)
+    return output
+
+
+@bot.command()
+async def blackjack(ctx, amount):
+    user_id = ctx.message.author.id
+
+    if amount == "all":
+        amount = users.get_balance(user_id)
+    else:
+        try:
+            amount = int(amount)
+        except:
+            await send_response(ctx, "Type **{}blackjack** [#|all] to play Blackjack!".format(config['prefix']))
+            return      
+
+    code = users.check_spend(user_id, amount)
+
+    if code is Return_Codes.User_Not_Exists:
+        await send_response(ctx, error_str("You can't play without a balance! Type **{0}collect** to collect your first balance!".format(config['prefix'])))
+    elif code is Return_Codes.Amount_Not_Enough:
+        await send_response(ctx, error_str("You can only gamble {0} or higher!".format(currency_fmt(1))))
+    elif code is Return_Codes.Balance_Not_Enough:
+        await send_response(ctx, error_str("Your bet exceeds your balance! (Balance: {0})".format(currency_fmt(users.get_balance(user_id)))))
+    elif code is Return_Codes.Success:
+
+        users.add_to_balance(user_id, -amount)
+
+        await send_response(ctx, confirm_str("Blackjack starting. Good luck! (Balance: {})".format(currency_fmt(users.get_balance(user_id)))))
+
+        
+        i = 0
+        dealer_hand = Blackjack.get_new_hand()
+        dealer_hand.calc_value()
+        player_hand = Blackjack.get_new_hand()
+        player_hand.calc_value()
+        game_done = player_hand.blackjack
+
+        hands_msg : discord.Message = await send_response(ctx, "Dealing hands...")
+
+        question_msg : discord.Message = None
+
+        while not game_done:
+
+            await hands_msg.edit(content=hands_to_string(dealer_hand, player_hand, True))
+
+            can_double_down = i == 0 and users.get_balance(user_id) >= amount
+
+            question = "What now? (👏 Hit, ✋ Stand"
+            if can_double_down:
+                question += ", ⏬ Double Down"
+            question += ")\n"
+
+            question_msg = await send_response(ctx, question)
+
+            await question_msg.add_reaction("👏")
+            await question_msg.add_reaction("✋")
+            if can_double_down:
+                await question_msg.add_reaction("⏬")
+            
+            def check(reaction:discord.Reaction, user) -> bool:
+                return reaction.message.id == question_msg.id \
+                        and user.id == user_id \
+                        and \
+                        (
+                            str(reaction.emoji) == "👏" or
+                            str(reaction.emoji) == "✋" or
+                            (
+                                can_double_down and
+                                str(reaction.emoji) == "⏬"
+                            )
+                        )
+
+            try:
+                reaction, _ = await bot.wait_for('reaction_add', timeout=60.0, check=check)
+            except asyncio.TimeoutError:
+                await question_msg.delete()
+                await send_response(ctx, error_str("Blackjack timed out! Be quicker next time."))
+                return
+            
+            if str(reaction.emoji) == "👏":
+                player_hand.add_card(Blackjack.draw_card())
+                player_hand.calc_value()
+                game_done = player_hand.busted or player_hand.curr_value == 21
+
+            elif str(reaction.emoji) == "✋":
+                game_done = True
+                
+            elif can_double_down and str(reaction.emoji) == "⏬":
+                player_hand.add_card(Blackjack.draw_card())
+                player_hand.calc_value()
+                users.add_to_balance(user_id, -amount)
+                amount *= 2
+                game_done = True
+
+            await question_msg.delete()
+            i += 1
+        
+        player_hand.calc_value()
+        dealer_hand.calc_value()
+
+        if player_hand.busted:
+            await hands_msg.edit(content=hands_to_string(dealer_hand, player_hand, False))
+            await send_response(ctx, "Oofda, you busted. (Balance: {})".format(currency_fmt(users.get_balance(user_id))))
+            return
+
+        while not dealer_hand.busted and dealer_hand.curr_value < 17:
+            dealer_hand.add_card(Blackjack.draw_card())
+            dealer_hand.calc_value()
+        
+        await hands_msg.edit(content=hands_to_string(dealer_hand, player_hand, False))
+
+        if dealer_hand.busted:
+            users.add_to_balance(user_id, amount*2)
+            await send_response(ctx, "Congrats! Dealer busted. (Balance: {})".format(currency_fmt(users.get_balance(user_id))))
+        elif player_hand.curr_value < dealer_hand.curr_value:
+            await send_response(ctx, "Oofda, Dealer is higher. (Balance: {})".format(currency_fmt(users.get_balance(user_id))))
+        elif player_hand.curr_value == dealer_hand.curr_value:
+            users.add_to_balance(user_id, amount)
+            await send_response(ctx, "You and the dealer tied. (Balance: {})".format(currency_fmt(users.get_balance(user_id))))
+        else:
+            users.add_to_balance(user_id, amount*2)
+            await send_response(ctx, "Congrats! You won. (Balance: {})".format(currency_fmt(users.get_balance(user_id))))
+            
+        
 
 @bot.command()
 async def ping(ctx):
