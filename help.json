@@ -39,7 +39,7 @@
         {
             "command": "blackjack [# | all]",
             "description": "Creates a new blackjack round. React to the message to signal your next action."
-        }
+        },
         {
             "command": "leaderboard",
             "description": "Shows the top 5 balances."
