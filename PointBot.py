@@ -558,7 +558,7 @@ async def blackjack(ctx, amount):
         dealer_hand.calc_value()
         player_hand = Blackjack.get_new_hand()
         player_hand.calc_value()
-        game_done = player_hand.blackjack
+        game_done = player_hand.blackjack or dealer_hand.blackjack
 
         hands_msg : discord.Message = await send_response(ctx, "Dealing hands...")
 
